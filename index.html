@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>蓝玫瑰视频 · 烟花上层特效</title>
+    <title>蓝色玫瑰视频</title>
     <style>
         * {
             margin: 0;
@@ -16,7 +16,6 @@
             padding: 0;
             overflow: hidden;
             background-color: black;
-            font-family: 'Arial', sans-serif;
             width: 100vw;
             height: 100vh;
             position: fixed;
@@ -24,7 +23,7 @@
             left: 0;
         }
         
-        /* 视频容器 - 作为底层背景 */
+        /* 视频容器 - 全屏显示 */
         .video-container {
             position: fixed;
             top: 0;
@@ -32,11 +31,10 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            z-index: 1; /* 底层：视频作为背景 */
             background-color: black;
         }
         
-        /* 视频样式 - 完全不透明 */
+        /* 视频样式 - 确保视频填充整个屏幕不变形 */
         video {
             position: absolute;
             top: 50%;
@@ -46,21 +44,7 @@
             min-height: 100%;
             width: auto;
             height: auto;
-            object-fit: cover;
-            opacity: 1; /* 完全不透明 */
-            z-index: 1;
-        }
-        
-        /* 烟花画布 - 在视频上层 */
-        #canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-            z-index: 10; /* 高层：烟花在视频上面 */
-            pointer-events: none; /* 让点击穿透到视频 */
+            object-fit: cover; /* 保持宽高比并覆盖整个容器 */
         }
         
         /* 针对不同屏幕比例的优化 */
@@ -87,20 +71,6 @@
                 min-height: 100%;
                 object-fit: cover;
             }
-            
-            .title {
-                font-size: 18px !important;
-                top: 15px !important;
-                right: 15px !important;
-                padding: 8px 16px !important;
-            }
-            
-            .info {
-                font-size: 12px !important;
-                bottom: 15px !important;
-                left: 15px !important;
-                padding: 6px 12px !important;
-            }
         }
         
         /* 针对手机横屏的优化 */
@@ -114,502 +84,31 @@
             }
         }
         
-        /* 文字元素 - 保持在最顶层 */
-        .title {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 24px;
-            z-index: 20; /* 最顶层 */
-            text-shadow: 0 0 20px rgba(255,0,0,0.5);
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            padding: 10px 20px;
-            border-radius: 30px;
-            background-color: rgba(0,0,0,0.3);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
-            white-space: nowrap;
-            pointer-events: none;
+        /* 针对超宽屏幕的优化 */
+        @media (min-aspect-ratio: 21/9) {
+            video {
+                width: 100%;
+                height: auto;
+                min-width: 100%;
+                min-height: auto;
+            }
         }
         
-        .info {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            z-index: 20; /* 最顶层 */
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
-            background: rgba(0,0,0,0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
-            white-space: nowrap;
-            pointer-events: none;
-        }
-        
-        .info span {
-            color: #ff6b6b;
-            font-weight: bold;
-        }
-        
-        /* 增强烟花的视觉效果 */
-        .glow-effect {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 100%);
-            z-index: 15;
-            pointer-events: none;
-            mix-blend-mode: multiply;
+        /* 针对特别窄的屏幕 */
+        @media (max-aspect-ratio: 9/16) {
+            video {
+                width: auto;
+                height: 100%;
+                min-width: auto;
+                min-height: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 视频容器 - 作为底层背景 (z-index: 1) 完全不透明 -->
+    <!-- 视频容器 - 全屏显示 -->
     <div class="video-container">
         <video src="蓝色玫瑰代码.mp4" autoplay loop muted playsinline webkit-playsinline x5-playsinline></video>
     </div>
-    
-    <!-- 烟花画布 - 在视频上层 (z-index: 10) -->
-    <canvas id="canvas"></canvas>
-    
-    <!-- 增强效果 (z-index: 15) -->
-    <div class="glow-effect"></div>
-    
-    <!-- 文字元素 - 最顶层 (z-index: 20) -->
-    <div class="title">🌹 蓝色玫瑰 · 烟花绽放</div>
-    <div class="info">✨ 烟花在视频上层 | <span>点击画面</span> 开启音效</div>
-
-    <script>
-        // 获取canvas元素
-        const canvas = document.getElementById('canvas');
-        
-        // 全局变量声明
-        var pi, ctx, cx, cy, playerZ, playerX, playerY, playerVX, playerVY, playerVZ, pitch, yaw, pitchV, yawV;
-        var scale, seedTimer, seedInterval, seedLife, gravity, seeds, sparkPics, sparks, frames;
-        var pow1, pow2, pow3, pow4;
-        
-        // 检测设备类型
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-        
-        function initVars() {
-            pi = Math.PI;
-            ctx = canvas.getContext("2d");
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-            cx = canvas.width / 2;
-            cy = canvas.height / 2;
-            
-            // 根据设备类型调整相机参数
-            if (isMobileDevice()) {
-                playerZ = -35; // 移动设备拉远一点，看到更多烟花
-                scale = 500;
-            } else {
-                playerZ = -25;
-                scale = 600;
-            }
-            
-            playerX = playerY = playerVX = playerVY = playerVZ = pitch = yaw = pitchV = yawV = 0;
-            seedTimer = 0;
-            seedInterval = 5;
-            seedLife = 100;
-            gravity = .02;
-            seeds = [];
-            sparkPics = [];
-            sparks = [];
-            frames = 0;
-            
-            // 创建火花图片 - 使用更亮的颜色
-            createSparkPics();
-            
-            // 创建音频对象
-            try {
-                setupAudio();
-            } catch (e) {
-                console.log("Audio setup failed:", e);
-            }
-        }
-        
-        function createSparkPics() {
-            // 根据设备像素比调整火花大小
-            const pixelRatio = window.devicePixelRatio || 1;
-            const sparkSize = isMobileDevice() ? 48 : 64;
-            
-            for (let i = 1; i <= 10; i++) {
-                let offscreenCanvas = document.createElement('canvas');
-                offscreenCanvas.width = sparkSize * pixelRatio;
-                offscreenCanvas.height = sparkSize * pixelRatio;
-                let offCtx = offscreenCanvas.getContext('2d');
-                offCtx.scale(pixelRatio, pixelRatio);
-                
-                // 使用更鲜艳的颜色，让烟花在视频上更明显
-                let hue = (i * 36) % 360;
-                
-                let gradient = offCtx.createRadialGradient(sparkSize/2, sparkSize/2, 0, sparkSize/2, sparkSize/2, sparkSize/2);
-                gradient.addColorStop(0, `hsl(${hue}, 100%, 95%)`);
-                gradient.addColorStop(0.3, `hsl(${hue}, 100%, 80%)`);
-                gradient.addColorStop(0.6, `hsl(${hue}, 100%, 60%)`);
-                gradient.addColorStop(1, `hsl(${hue}, 100%, 40%)`);
-                
-                offCtx.fillStyle = gradient;
-                offCtx.beginPath();
-                offCtx.arc(sparkSize/2, sparkSize/2, sparkSize/2.5, 0, pi * 2);
-                offCtx.fill();
-                
-                // 添加更强的光晕
-                offCtx.shadowColor = `hsl(${hue}, 100%, 70%)`;
-                offCtx.shadowBlur = 30;
-                offCtx.beginPath();
-                offCtx.arc(sparkSize/2, sparkSize/2, sparkSize/3.5, 0, pi * 2);
-                offCtx.fillStyle = `hsl(${hue}, 100%, 85%)`;
-                offCtx.fill();
-                
-                // 添加中心亮点
-                offCtx.shadowBlur = 20;
-                offCtx.beginPath();
-                offCtx.arc(sparkSize/2, sparkSize/2, sparkSize/6, 0, pi * 2);
-                offCtx.fillStyle = 'white';
-                offCtx.fill();
-                
-                let img = new Image();
-                img.src = offscreenCanvas.toDataURL('image/png');
-                sparkPics.push(img);
-            }
-        }
-        
-        function setupAudio() {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-                let audioCtx = new AudioContext();
-                
-                pow1 = { play: function() { playSound(audioCtx, 200, 0.1); } };
-                pow2 = { play: function() { playSound(audioCtx, 300, 0.15); } };
-                pow3 = { play: function() { playSound(audioCtx, 400, 0.2); } };
-                pow4 = { play: function() { playSound(audioCtx, 500, 0.25); } };
-                
-                // 点击画面激活音频
-                canvas.addEventListener('click', function() {
-                    if (audioCtx.state === 'suspended') {
-                        audioCtx.resume();
-                    }
-                });
-                
-                // 视频点击也激活音频
-                document.querySelector('video').addEventListener('click', function() {
-                    if (audioCtx.state === 'suspended') {
-                        audioCtx.resume();
-                    }
-                });
-            }
-        }
-        
-        function playSound(audioCtx, freq, duration) {
-            if (audioCtx.state === 'suspended') return;
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.value = freq;
-            gain.gain.value = 0.1;
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-
-        function rasterizePoint(x, y, z) {
-            var p, d;
-            x -= playerX;
-            y -= playerY;
-            z -= playerZ;
-            p = Math.atan2(x, z);
-            d = Math.sqrt(x * x + z * z);
-            x = Math.sin(p - yaw) * d;
-            z = Math.cos(p - yaw) * d;
-            p = Math.atan2(y, z);
-            d = Math.sqrt(y * y + z * z);
-            y = Math.sin(p - pitch) * d;
-            z = Math.cos(p - pitch) * d;
-            
-            var rx1 = -1000, ry1 = 1, rx2 = 1000, ry2 = 1, rx3 = 0, ry3 = 0, rx4 = x, ry4 = z;
-            var uc = (ry4 - ry3) * (rx2 - rx1) - (rx4 - rx3) * (ry2 - ry1);
-            
-            if (!uc) return { x: 0, y: 0, d: -1 };
-            
-            var ua = ((rx4 - rx3) * (ry1 - ry3) - (ry4 - ry3) * (rx1 - rx3)) / uc;
-            var ub = ((rx2 - rx1) * (ry1 - ry3) - (ry2 - ry1) * (rx1 - rx3)) / uc;
-            
-            if (!z) z = .000000001;
-            
-            if (ua > 0 && ua < 1 && ub > 0 && ub < 1) {
-                return {
-                    x: cx + (rx1 + ua * (rx2 - rx1)) * scale,
-                    y: cy + y / z * scale,
-                    d: Math.sqrt(x * x + y * y + z * z)
-                };
-            } else {
-                return {
-                    x: cx + (rx1 + ua * (rx2 - rx1)) * scale,
-                    y: cy + y / z * scale,
-                    d: -1
-                };
-            }
-        }
-
-        function spawnSeed() {
-            var seed = new Object();
-            seed.x = -50 + Math.random() * 100;
-            seed.y = 25;
-            seed.z = -50 + Math.random() * 100;
-            seed.vx = .1 - Math.random() * .2;
-            seed.vy = -1.5;
-            seed.vz = .1 - Math.random() * .2;
-            seed.born = frames;
-            seeds.push(seed);
-        }
-
-        function splode(x, y, z) {
-            var t = 5 + parseInt(Math.random() * 150);
-            var sparkV = 1 + Math.random() * 2.5;
-            var type = parseInt(Math.random() * 3);
-            var pic1, pic2, pic3;
-            
-            switch (type) {
-                case 0:
-                    pic1 = parseInt(Math.random() * 10);
-                    break;
-                case 1:
-                    pic1 = parseInt(Math.random() * 10);
-                    do { pic2 = parseInt(Math.random() * 10); } while (pic2 == pic1);
-                    break;
-                case 2:
-                    pic1 = parseInt(Math.random() * 10);
-                    do { pic2 = parseInt(Math.random() * 10); } while (pic2 == pic1);
-                    do { pic3 = parseInt(Math.random() * 10); } while (pic3 == pic1 || pic3 == pic2);
-                    break;
-            }
-            
-            for (var m = 1; m < t; ++m) {
-                var spark = new Object();
-                spark.x = x; spark.y = y; spark.z = z;
-                var p1 = pi * 2 * Math.random();
-                var p2 = pi * Math.random();
-                var v = sparkV * (1 + Math.random() / 6);
-                spark.vx = Math.sin(p1) * Math.sin(p2) * v;
-                spark.vz = Math.cos(p1) * Math.sin(p2) * v;
-                spark.vy = Math.cos(p2) * v;
-                
-                switch (type) {
-                    case 0: spark.img = sparkPics[pic1]; break;
-                    case 1:
-                        spark.img = sparkPics[parseInt(Math.random() * 2) ? pic1 : pic2];
-                        break;
-                    case 2:
-                        switch (parseInt(Math.random() * 3)) {
-                            case 0: spark.img = sparkPics[pic1]; break;
-                            case 1: spark.img = sparkPics[pic2]; break;
-                            case 2: spark.img = sparkPics[pic3]; break;
-                        }
-                        break;
-                }
-                
-                spark.radius = 30 + Math.random() * 60; // 稍微放大
-                spark.alpha = 1; // 完全不透明
-                spark.trail = [];
-                sparks.push(spark);
-            }
-            
-            try {
-                var pow;
-                switch (parseInt(Math.random() * 4)) {
-                    case 0: pow = pow1; break;
-                    case 1: pow = pow2; break;
-                    case 2: pow = pow3; break;
-                    case 3: pow = pow4; break;
-                }
-                if (pow && pow.play) {
-                    pow.play();
-                }
-            } catch (e) {}
-        }
-
-        function doLogic() {
-            if (seedTimer < frames) {
-                seedTimer = frames + seedInterval * Math.random() * 10;
-                spawnSeed();
-            }
-            
-            for (var i = 0; i < seeds.length; ++i) {
-                seeds[i].vy += gravity;
-                seeds[i].x += seeds[i].vx;
-                seeds[i].y += seeds[i].vy;
-                seeds[i].z += seeds[i].vz;
-                
-                if (frames - seeds[i].born > seedLife) {
-                    splode(seeds[i].x, seeds[i].y, seeds[i].z);
-                    seeds.splice(i, 1);
-                    i--;
-                }
-            }
-            
-            for (var i = 0; i < sparks.length; ++i) {
-                if (sparks[i].alpha > 0 && sparks[i].radius > 5) {
-                    sparks[i].alpha -= .008;
-                    sparks[i].radius /= 1.015;
-                    sparks[i].vy += gravity;
-                    
-                    var point = new Object();
-                    point.x = sparks[i].x;
-                    point.y = sparks[i].y;
-                    point.z = sparks[i].z;
-                    
-                    if (sparks[i].trail.length) {
-                        var x = sparks[i].trail[sparks[i].trail.length - 1].x;
-                        var y = sparks[i].trail[sparks[i].trail.length - 1].y;
-                        var z = sparks[i].trail[sparks[i].trail.length - 1].z;
-                        var d = ((point.x - x) * (point.x - x) + (point.y - y) * (point.y - y) + (point.z - z) * (point.z - z));
-                        
-                        if (d > 9) {
-                            sparks[i].trail.push(point);
-                        }
-                    } else {
-                        sparks[i].trail.push(point);
-                    }
-                    
-                    if (sparks[i].trail.length > 5) sparks[i].trail.splice(0, 1);
-                    
-                    sparks[i].x += sparks[i].vx;
-                    sparks[i].y += sparks[i].vy;
-                    sparks[i].z += sparks[i].vz;
-                    
-                    sparks[i].vx /= 1.075;
-                    sparks[i].vy /= 1.075;
-                    sparks[i].vz /= 1.075;
-                } else {
-                    sparks.splice(i, 1);
-                    i--;
-                }
-            }
-            
-            var p = Math.atan2(playerX, playerZ);
-            var d = Math.sqrt(playerX * playerX + playerZ * playerZ);
-            d += Math.sin(frames / 80) / 1.25;
-            var t = Math.sin(frames / 200) / 40;
-            playerX = Math.sin(p + t) * d;
-            playerZ = Math.cos(p + t) * d;
-            yaw = pi + p + t;
-        }
-
-        function draw() {
-            // 清除画布（透明背景，让视频透出来）
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 使用叠加混合模式让烟花更亮
-            ctx.globalCompositeOperation = 'lighter';
-            
-            // 绘制火花
-            for (var i = 0; i < sparks.length; ++i) {
-                // 绘制拖尾
-                for (var j = 0; j < sparks[i].trail.length; ++j) {
-                    var point = sparks[i].trail[j];
-                    var rp = rasterizePoint(point.x, point.y, point.z);
-                    
-                    if (rp.d != -1) {
-                        var alpha = sparks[i].alpha * (0.3 + 0.7 * (j / sparks[i].trail.length));
-                        var size = sparks[i].radius * (0.2 + 0.8 * (j / sparks[i].trail.length));
-                        
-                        ctx.globalAlpha = alpha;
-                        if (sparks[i].img && sparks[i].img.complete) {
-                            ctx.drawImage(sparks[i].img, rp.x - size / 2, rp.y - size / 2, size, size);
-                        }
-                    }
-                }
-                
-                // 绘制当前火花
-                var rp = rasterizePoint(sparks[i].x, sparks[i].y, sparks[i].z);
-                if (rp.d != -1) {
-                    ctx.globalAlpha = sparks[i].alpha;
-                    if (sparks[i].img && sparks[i].img.complete) {
-                        ctx.drawImage(sparks[i].img, rp.x - sparks[i].radius / 2, rp.y - sparks[i].radius / 2, sparks[i].radius, sparks[i].radius);
-                    }
-                }
-            }
-            
-            // 绘制上升的种子
-            ctx.globalAlpha = 0.8;
-            ctx.fillStyle = 'white';
-            ctx.shadowColor = 'white';
-            ctx.shadowBlur = 15;
-            
-            for (var i = 0; i < seeds.length; ++i) {
-                var rp = rasterizePoint(seeds[i].x, seeds[i].y, seeds[i].z);
-                if (rp.d != -1) {
-                    ctx.beginPath();
-                    ctx.arc(rp.x, rp.y, 5, 0, pi * 2);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    ctx.fill();
-                }
-            }
-            
-            // 重置混合模式和阴影
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 1;
-        }
-
-        function animate() {
-            if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-                cx = canvas.width / 2;
-                cy = canvas.height / 2;
-            }
-            
-            doLogic();
-            draw();
-            frames++;
-            
-            requestAnimationFrame(animate);
-        }
-
-        // 页面加载完成后启动
-        window.addEventListener('load', function() {
-            initVars();
-            animate();
-        });
-
-        // 窗口大小改变时调整
-        window.addEventListener('resize', function() {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-            cx = canvas.width / 2;
-            cy = canvas.height / 2;
-            
-            if (isMobileDevice()) {
-                playerZ = -35;
-                scale = 500;
-            } else {
-                playerZ = -25;
-                scale = 600;
-            }
-        });
-        
-        window.addEventListener('orientationchange', function() {
-            setTimeout(function() {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-                cx = canvas.width / 2;
-                cy = canvas.height / 2;
-            }, 100);
-        });
-    </script>
 </body>
 </html>
