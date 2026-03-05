@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D烟花特效 - 蓝色玫瑰</title>
+    <title>蓝玫瑰视频 · 烟花背景</title>
     <style>
         * {
             margin: 0;
@@ -24,7 +24,20 @@
             left: 0;
         }
         
-        /* 视频容器 - 确保视频始终填充整个屏幕 */
+        /* 烟花画布 - 作为背景 */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 1; /* 底层：烟花背景 */
+            pointer-events: none; /* 让点击穿透到视频 */
+            opacity: 0.9; /* 稍微透明，让视频更突出 */
+        }
+        
+        /* 视频容器 - 作为顶层 */
         .video-container {
             position: fixed;
             top: 0;
@@ -32,11 +45,12 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            z-index: 1;
-            background-color: #000;
+            z-index: 10; /* 高层：视频在烟花上面 */
+            background-color: transparent;
+            pointer-events: none; /* 允许点击穿透到下面的元素（如果需要） */
         }
         
-        /* 视频样式 - 使用object-fit cover确保视频填充整个屏幕不变形 */
+        /* 视频样式 - 确保视频填充整个屏幕不变形 */
         video {
             position: absolute;
             top: 50%;
@@ -46,13 +60,13 @@
             min-height: 100%;
             width: auto;
             height: auto;
-            object-fit: cover; /* 关键属性：保持宽高比并覆盖整个容器 */
-            opacity: 0.7;
-            filter: blur(2px) brightness(0.8);
-            z-index: 1;
+            object-fit: cover; /* 保持宽高比并覆盖整个容器 */
+            opacity: 0.95; /* 稍微透明，让背景烟花透出来 */
+            z-index: 10;
+            pointer-events: auto; /* 视频本身可以接收点击事件 */
         }
         
-        /* 针对不同屏幕比例的备用方案 */
+        /* 针对不同屏幕比例的优化 */
         @media (max-aspect-ratio: 16/9) {
             video {
                 width: 100%;
@@ -77,7 +91,6 @@
                 object-fit: cover;
             }
             
-            /* 手机端文字大小调整 */
             .title {
                 font-size: 18px !important;
                 top: 15px !important;
@@ -104,35 +117,14 @@
             }
         }
         
-        /* 针对平板设备的优化 */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .title {
-                font-size: 22px !important;
-            }
-            
-            .info {
-                font-size: 14px !important;
-            }
-        }
-        
-        #canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-            z-index: 2;
-            pointer-events: none; /* 让点击穿透到视频 */
-        }
-        
+        /* 文字元素 - 保持在最顶层 */
         .title {
             position: fixed;
             top: 20px;
             right: 20px;
             color: white;
             font-size: 24px;
-            z-index: 3;
+            z-index: 20; /* 最顶层 */
             text-shadow: 0 0 20px rgba(255,0,0,0.5);
             font-weight: bold;
             background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
@@ -143,7 +135,8 @@
             background-color: rgba(0,0,0,0.3);
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255,255,255,0.2);
-            white-space: nowrap; /* 防止文字换行 */
+            white-space: nowrap;
+            pointer-events: none; /* 文字不阻挡点击 */
         }
         
         .info {
@@ -152,7 +145,7 @@
             left: 20px;
             color: rgba(255, 255, 255, 0.7);
             font-size: 14px;
-            z-index: 3;
+            z-index: 20; /* 最顶层 */
             text-shadow: 0 0 10px rgba(0,0,0,0.5);
             background: rgba(0,0,0,0.3);
             padding: 8px 16px;
@@ -160,6 +153,7 @@
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255,255,255,0.2);
             white-space: nowrap;
+            pointer-events: none; /* 文字不阻挡点击 */
         }
         
         .info span {
@@ -167,54 +161,34 @@
             font-weight: bold;
         }
         
-        /* 添加一个遮罩层，确保视频在任何比例下都不会出现黑边 */
-        .video-overlay {
+        /* 添加一个微妙的遮罩增强视觉效果 */
+        .enhance-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.2) 100%);
-            z-index: 2;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%);
+            z-index: 15; /* 在视频和文字之间 */
             pointer-events: none;
-        }
-        
-        /* 针对超宽屏幕的优化 */
-        @media (min-aspect-ratio: 21/9) {
-            video {
-                width: 100%;
-                height: auto;
-                min-width: 100%;
-                min-height: auto;
-            }
-        }
-        
-        /* 针对特别窄的屏幕 */
-        @media (max-aspect-ratio: 9/16) {
-            video {
-                width: auto;
-                height: 100%;
-                min-width: auto;
-                min-height: 100%;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- 视频容器 -->
+    <!-- 烟花画布 - 作为背景 (z-index: 1) -->
+    <canvas id="canvas"></canvas>
+    
+    <!-- 视频容器 - 作为顶层 (z-index: 10) -->
     <div class="video-container">
         <video src="蓝色玫瑰代码.mp4" autoplay loop muted playsinline webkit-playsinline x5-playsinline></video>
     </div>
     
-    <!-- 视觉增强遮罩 -->
-    <div class="video-overlay"></div>
+    <!-- 视觉增强遮罩 (z-index: 15) -->
+    <div class="enhance-overlay"></div>
     
-    <!-- 画布容器 -->
-    <canvas id="canvas"></canvas>
-    
-    <!-- 文字元素 -->
-    <div class="title">🌹 蓝色玫瑰 · 烟花之夜</div>
-    <div class="info">✨ 3D Fireworks | <span>点击画面</span> 开启音效</div>
+    <!-- 文字元素 - 最顶层 (z-index: 20) -->
+    <div class="title">🌹 蓝色玫瑰 · 烟花背景</div>
+    <div class="info">✨ 烟花背景 | <span>点击视频</span> 开启音效</div>
 
     <script>
         // 获取canvas元素
@@ -224,7 +198,6 @@
         var pi, ctx, cx, cy, playerZ, playerX, playerY, playerVX, playerVY, playerVZ, pitch, yaw, pitchV, yawV;
         var scale, seedTimer, seedInterval, seedLife, gravity, seeds, sparkPics, sparks, frames;
         var pow1, pow2, pow3, pow4;
-        var s = "https://cantelope.org/NYE/";
         
         // 检测设备类型
         function isMobileDevice() {
@@ -281,24 +254,24 @@
                 let offCtx = offscreenCanvas.getContext('2d');
                 offCtx.scale(pixelRatio, pixelRatio);
                 
+                // 使用更柔和的颜色，作为背景烟花
                 let hue = (i * 36) % 360;
                 
                 let gradient = offCtx.createRadialGradient(sparkSize/2, sparkSize/2, 0, sparkSize/2, sparkSize/2, sparkSize/2);
-                gradient.addColorStop(0, `hsl(${hue}, 100%, 90%)`);
-                gradient.addColorStop(0.4, `hsl(${hue}, 100%, 70%)`);
-                gradient.addColorStop(0.7, `hsl(${hue}, 100%, 50%)`);
-                gradient.addColorStop(1, `hsl(${hue}, 100%, 30%)`);
+                gradient.addColorStop(0, `hsla(${hue}, 90%, 80%, 0.9)`);
+                gradient.addColorStop(0.5, `hsla(${hue}, 80%, 60%, 0.7)`);
+                gradient.addColorStop(1, `hsla(${hue}, 70%, 40%, 0.5)`);
                 
                 offCtx.fillStyle = gradient;
                 offCtx.beginPath();
                 offCtx.arc(sparkSize/2, sparkSize/2, sparkSize/2.5, 0, pi * 2);
                 offCtx.fill();
                 
-                offCtx.shadowColor = `hsl(${hue}, 100%, 70%)`;
+                offCtx.shadowColor = `hsla(${hue}, 100%, 70%, 0.5)`;
                 offCtx.shadowBlur = 20;
                 offCtx.beginPath();
                 offCtx.arc(sparkSize/2, sparkSize/2, sparkSize/3.5, 0, pi * 2);
-                offCtx.fillStyle = `hsl(${hue}, 100%, 80%)`;
+                offCtx.fillStyle = `hsla(${hue}, 90%, 70%, 0.8)`;
                 offCtx.fill();
                 
                 let img = new Image();
@@ -317,7 +290,8 @@
                 pow3 = { play: function() { playSound(audioCtx, 400, 0.2); } };
                 pow4 = { play: function() { playSound(audioCtx, 500, 0.25); } };
                 
-                canvas.addEventListener('click', function() {
+                // 点击视频区域激活音频
+                document.querySelector('video').addEventListener('click', function() {
                     if (audioCtx.state === 'suspended') {
                         audioCtx.resume();
                     }
@@ -332,15 +306,11 @@
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.frequency.value = freq;
-            gain.gain.value = 0.1;
+            gain.gain.value = 0.05; // 音量调低，作为背景音效
             osc.start();
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 其余函数保持不变（rasterizePoint, spawnSeed, splode, doLogic, draw）
-        // 为了节省空间，这里省略了这些函数的重复代码
-        // 实际使用时需要包含之前的所有函数
-        
         function rasterizePoint(x, y, z) {
             var p, d;
             x -= playerX;
@@ -438,7 +408,7 @@
                 }
                 
                 spark.radius = 25 + Math.random() * 50;
-                spark.alpha = 1;
+                spark.alpha = 0.8; // 降低初始透明度，作为背景
                 spark.trail = [];
                 sparks.push(spark);
             }
@@ -478,8 +448,8 @@
             
             for (var i = 0; i < sparks.length; ++i) {
                 if (sparks[i].alpha > 0 && sparks[i].radius > 5) {
-                    sparks[i].alpha -= .01;
-                    sparks[i].radius /= 1.02;
+                    sparks[i].alpha -= .005; // 更慢的淡出
+                    sparks[i].radius /= 1.01; // 更慢的缩小
                     sparks[i].vy += gravity;
                     
                     var point = new Object();
@@ -506,9 +476,9 @@
                     sparks[i].y += sparks[i].vy;
                     sparks[i].z += sparks[i].vz;
                     
-                    sparks[i].vx /= 1.075;
-                    sparks[i].vy /= 1.075;
-                    sparks[i].vz /= 1.075;
+                    sparks[i].vx /= 1.05;
+                    sparks[i].vy /= 1.05;
+                    sparks[i].vz /= 1.05;
                 } else {
                     sparks.splice(i, 1);
                     i--;
@@ -527,7 +497,8 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            ctx.globalCompositeOperation = 'lighter';
+            // 使用更柔和的混合模式
+            ctx.globalCompositeOperation = 'screen';
             
             for (var i = 0; i < sparks.length; ++i) {
                 for (var j = 0; j < sparks[i].trail.length; ++j) {
@@ -535,10 +506,10 @@
                     var rp = rasterizePoint(point.x, point.y, point.z);
                     
                     if (rp.d != -1) {
-                        var alpha = sparks[i].alpha * (0.3 + 0.7 * (j / sparks[i].trail.length));
-                        var size = sparks[i].radius * (0.2 + 0.8 * (j / sparks[i].trail.length));
+                        var alpha = sparks[i].alpha * (0.2 + 0.5 * (j / sparks[i].trail.length));
+                        var size = sparks[i].radius * (0.1 + 0.5 * (j / sparks[i].trail.length));
                         
-                        ctx.globalAlpha = alpha;
+                        ctx.globalAlpha = alpha * 0.7; // 降低整体透明度
                         if (sparks[i].img && sparks[i].img.complete) {
                             ctx.drawImage(sparks[i].img, rp.x - size / 2, rp.y - size / 2, size, size);
                         }
@@ -547,30 +518,33 @@
                 
                 var rp = rasterizePoint(sparks[i].x, sparks[i].y, sparks[i].z);
                 if (rp.d != -1) {
-                    ctx.globalAlpha = sparks[i].alpha;
+                    ctx.globalAlpha = sparks[i].alpha * 0.8; // 降低透明度
                     if (sparks[i].img && sparks[i].img.complete) {
                         ctx.drawImage(sparks[i].img, rp.x - sparks[i].radius / 2, rp.y - sparks[i].radius / 2, sparks[i].radius, sparks[i].radius);
                     }
                 }
             }
             
-            ctx.globalAlpha = 1;
+            // 绘制上升的种子 - 更淡一些
+            ctx.globalAlpha = 0.4;
             ctx.fillStyle = 'white';
             ctx.shadowColor = 'white';
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 5;
             
             for (var i = 0; i < seeds.length; ++i) {
                 var rp = rasterizePoint(seeds[i].x, seeds[i].y, seeds[i].z);
                 if (rp.d != -1) {
                     ctx.beginPath();
-                    ctx.arc(rp.x, rp.y, 4, 0, pi * 2);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.arc(rp.x, rp.y, 3, 0, pi * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                     ctx.fill();
                 }
             }
             
+            // 重置混合模式和阴影
             ctx.globalCompositeOperation = 'source-over';
             ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
         }
 
         function animate() {
@@ -601,7 +575,6 @@
             cx = canvas.width / 2;
             cy = canvas.height / 2;
             
-            // 根据设备类型调整参数
             if (isMobileDevice()) {
                 playerZ = -35;
                 scale = 500;
@@ -611,7 +584,6 @@
             }
         });
         
-        // 处理横竖屏切换
         window.addEventListener('orientationchange', function() {
             setTimeout(function() {
                 canvas.width = canvas.clientWidth;
@@ -623,3 +595,4 @@
     </script>
 </body>
 </html>
+
