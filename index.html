@@ -1,116 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>蓝色玫瑰视频</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: black;
-            width: 100vw;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
-        
-        /* 视频容器 - 全屏显示 */
-        .video-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: black;
-        }
-        
-        /* 视频样式 - 确保视频填充整个屏幕不变形 */
-        video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: cover; /* 保持宽高比并覆盖整个容器 */
-        }
-        
-        /* 针对不同屏幕比例的优化 */
-        @media (max-aspect-ratio: 16/9) {
-            video {
-                width: 100%;
-                height: auto;
-            }
-        }
-        
-        @media (min-aspect-ratio: 16/9) {
-            video {
-                width: auto;
-                height: 100%;
-            }
-        }
-        
-        /* 针对手机竖屏的特别优化 */
-        @media (max-width: 768px) and (orientation: portrait) {
-            video {
-                width: auto;
-                height: 100%;
-                min-width: auto;
-                min-height: 100%;
-                object-fit: cover;
-            }
-        }
-        
-        /* 针对手机横屏的优化 */
-        @media (max-width: 896px) and (orientation: landscape) {
-            video {
-                width: 100%;
-                height: auto;
-                min-width: 100%;
-                min-height: auto;
-                object-fit: cover;
-            }
-        }
-        
-        /* 针对超宽屏幕的优化 */
-        @media (min-aspect-ratio: 21/9) {
-            video {
-                width: 100%;
-                height: auto;
-                min-width: 100%;
-                min-height: auto;
-            }
-        }
-        
-        /* 针对特别窄的屏幕 */
-        @media (max-aspect-ratio: 9/16) {
-            video {
-                width: auto;
-                height: 100%;
-                min-width: auto;
-                min-height: 100%;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>蓝色玫瑰视频</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background-color:black;
+    width:100vw;
+    height:100vh;
+    position:fixed;
+    top:0;
+    left:0;
+}
+
+.video-container{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background-color:black;
+}
+
+video{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    min-width:100%;
+    min-height:100%;
+    width:auto;
+    height:auto;
+    object-fit:cover;
+}
+
+@media (max-aspect-ratio:16/9){
+video{
+    width:100%;
+    height:auto;
+}
+}
+
+@media (min-aspect-ratio:16/9){
+video{
+    width:auto;
+    height:100%;
+}
+}
+
+@media (max-width:768px) and (orientation:portrait){
+video{
+    width:auto;
+    height:100%;
+    min-width:auto;
+    min-height:100%;
+}
+}
+
+@media (max-width:896px) and (orientation:landscape){
+video{
+    width:100%;
+    height:auto;
+    min-width:100%;
+    min-height:auto;
+}
+}
+
+@media (min-aspect-ratio:21/9){
+video{
+    width:100%;
+    height:auto;
+    min-width:100%;
+    min-height:auto;
+}
+}
+
+@media (max-aspect-ratio:9/16){
+video{
+    width:auto;
+    height:100%;
+    min-width:auto;
+    min-height:100%;
+}
+}
+</style>
 </head>
+
 <body>
-    <!-- 视频容器 - 全屏显示 -->
-    <div class="video-container">
-        <video src="蓝色玫瑰代码.mp4" autoplay loop muted playsinline webkit-playsinline x5-playsinline></video>
-    </div>
-    <audio autoplay loop muted src="城南花已开.mp3"></audio>
+
+<div class="video-container">
+    <video src="蓝色玫瑰代码.mp4" autoplay loop muted playsinline></video>
+</div>
+
+<!-- 背景音乐 -->
+<audio id="bgm" src="城南花已开.mp3" loop></audio>
+
+<script>
+window.addEventListener("load", function () {
+    let music = document.getElementById("bgm");
+
+    let playPromise = music.play();
+
+    if (playPromise !== undefined) {
+        playPromise.catch(() => {
+            document.body.addEventListener("click", function () {
+                music.play();
+            }, { once: true });
+        });
+    }
+});
+</script>
+
 </body>
 </html>
 
