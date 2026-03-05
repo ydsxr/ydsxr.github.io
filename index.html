@@ -1,130 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>蓝色玫瑰视频</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blue Rose</title>
 
 <style>
+
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+margin:0;
+padding:0;
+box-sizing:border-box;
 }
 
 body{
-    margin:0;
-    padding:0;
-    overflow:hidden;
-    background-color:black;
-    width:100vw;
-    height:100vh;
-    position:fixed;
-    top:0;
-    left:0;
+overflow:hidden;
+font-family:Arial;
 }
 
+/* 初始背景图片 */
+.bg{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:url("星空草地.png") no-repeat center center;
+background-size:cover;
+z-index:0;
+}
+
+/* 星空 */
+#starCanvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:1;
+display:none;
+}
+
+/* 视频容器 */
 .video-container{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background-color:black;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+overflow:hidden;
+z-index:2;
+display:none;
 }
 
 video{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    min-width:100%;
-    min-height:100%;
-    width:auto;
-    height:auto;
-    object-fit:cover;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+min-width:100%;
+min-height:100%;
+object-fit:cover;
 }
 
-@media (max-aspect-ratio:16/9){
-video{
-    width:100%;
-    height:auto;
-}
-}
-
-@media (min-aspect-ratio:16/9){
-video{
-    width:auto;
-    height:100%;
-}
-}
-
-@media (max-width:768px) and (orientation:portrait){
-video{
-    width:auto;
-    height:100%;
-    min-width:auto;
-    min-height:100%;
-}
+/* 对话框背景 */
+.dialog-bg{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:5;
 }
 
-@media (max-width:896px) and (orientation:landscape){
-video{
-    width:100%;
-    height:auto;
-    min-width:100%;
-    min-height:auto;
-}
-}
-
-@media (min-aspect-ratio:21/9){
-video{
-    width:100%;
-    height:auto;
-    min-width:100%;
-    min-height:auto;
-}
+/* 对话框 */
+.dialog{
+background:transparent;
+padding:40px;
+text-align:center;
+max-width:300px;
 }
 
-@media (max-aspect-ratio:9/16){
-video{
-    width:auto;
-    height:100%;
-    min-width:auto;
-    min-height:100%;
+.dialog h2{
+margin-bottom:25px;
+font-size:24px;
 }
+
+button{
+padding:12px 30px;
+font-size:18px;
+border:none;
+border-radius:8px;
+background:#4CAF50;
+color:white;
+cursor:pointer;
 }
+
+button:hover{
+background:#45a049;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="video-container">
-    <video src="蓝色玫瑰代码.mp4" autoplay loop muted playsinline></video>
+<!-- 背景图片 -->
+<div class="bg" id="bg"></div>
+
+<!-- 星空 -->
+<canvas id="starCanvas"></canvas>
+
+<!-- 对话框 -->
+<div class="dialog-bg" id="dialog">
+<div class="dialog">
+<h2>A rose for you 🌹</h2>
+<button onclick="acceptRose()">Accept</button>
+</div>
 </div>
 
-<!-- 背景音乐 -->
+<!-- 视频 -->
+<div class="video-container" id="videoBox">
+<video src="蓝色玫瑰代码.mp4" autoplay loop muted playsinline></video>
+</div>
+
+<!-- 音乐 -->
 <audio id="bgm" src="城南花已开.mp3" loop></audio>
 
 <script>
-window.addEventListener("load", function () {
-    let music = document.getElementById("bgm");
 
-    let playPromise = music.play();
+function acceptRose(){
 
-    if (playPromise !== undefined) {
-        playPromise.catch(() => {
-            document.body.addEventListener("click", function () {
-                music.play();
-            }, { once: true });
-        });
-    }
+document.getElementById("dialog").style.display="none";
+document.getElementById("bg").style.display="none";
+
+document.getElementById("starCanvas").style.display="block";
+document.getElementById("videoBox").style.display="block";
+
+document.getElementById("bgm").play();
+
+startStars();
+
+}
+
+/* 星空 */
+
+function startStars(){
+
+const canvas=document.getElementById("starCanvas");
+const ctx=canvas.getContext("2d");
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let stars=[];
+
+for(let i=0;i<200;i++){
+
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+r:Math.random()*1.5,
+alpha:Math.random(),
+speed:Math.random()*0.02
 });
+
+}
+
+function drawStars(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+stars.forEach(star=>{
+
+star.alpha+=star.speed;
+
+if(star.alpha>1||star.alpha<0){
+star.speed*=-1;
+}
+
+ctx.beginPath();
+ctx.arc(star.x,star.y,star.r,0,Math.PI*2);
+ctx.fillStyle="rgba(255,255,255,"+star.alpha+")";
+ctx.fill();
+
+});
+
+requestAnimationFrame(drawStars);
+
+}
+
+drawStars();
+
+}
+
 </script>
 
 </body>
 </html>
-
-
-
