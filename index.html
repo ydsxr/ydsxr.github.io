@@ -3,200 +3,511 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script>
-        function initVars(){
-
-pi=Math.PI;
-ctx=canvas.getContext("2d");
-canvas.width=canvas.clientWidth;
-canvas.height=canvas.clientHeight;
-cx=canvas.width/2;
-cy=canvas.height/2;
-playerZ=-25;
-playerX=playerY=playerVX=playerVY=playerVZ=pitch=yaw=pitchV=yawV=0;
-scale=600;
-seedTimer=0;seedInterval=5,seedLife=100;gravity=.02;
-seeds=new Array();
-sparkPics=new Array();
-s="https://cantelope.org/NYE/";
-for(i=1;i<=10;++i){
-    sparkPic=new Image();
-    sparkPic.src=s+"spark"+i+".png";
-    sparkPics.push(sparkPic);
-}
-sparks=new Array();
-pow1=new Audio(s+"pow1.ogg");
-pow2=new Audio(s+"pow2.ogg");
-pow3=new Audio(s+"pow3.ogg");
-pow4=new Audio(s+"pow4.ogg");
-frames = 0;
-}
-
-function rasterizePoint(x,y,z){
-
-var p,d;
-x-=playerX;
-y-=playerY;
-z-=playerZ;
-p=Math.atan2(x,z);
-d=Math.sqrt(x*x+z*z);
-x=Math.sin(p-yaw)*d;
-z=Math.cos(p-yaw)*d;
-p=Math.atan2(y,z);
-d=Math.sqrt(y*y+z*z);
-y=Math.sin(p-pitch)*d;
-z=Math.cos(p-pitch)*d;
-var rx1=-1000,ry1=1,rx2=1000,ry2=1,rx3=0,ry3=0,rx4=x,ry4=z,uc=(ry4-ry3)*(rx2-rx1)-(rx4-rx3)*(ry2-ry1);
-if(!uc) return {x:0,y:0,d:-1};
-var ua=((rx4-rx3)*(ry1-ry3)-(ry4-ry3)*(rx1-rx3))/uc;
-var ub=((rx2-rx1)*(ry1-ry3)-(ry2-ry1)*(rx1-rx3))/uc;
-if(!z)z=.000000001;
-if(ua>0&&ua<1&&ub>0&&ub<1){
-    return {
-        x:cx+(rx1+ua*(rx2-rx1))*scale,
-        y:cy+y/z*scale,
-        d:Math.sqrt(x*x+y*y+z*z)
-    };
-}else{
-    return {
-        x:cx+(rx1+ua*(rx2-rx1))*scale,
-        y:cy+y/z*scale,
-        d:-1
-    };
-}
-}
-
-function spawnSeed(){
-
-seed=new Object();
-seed.x=-50+Math.random()*100;
-seed.y=25;
-seed.z=-50+Math.random()*100;
-seed.vx=.1-Math.random()*.2;
-seed.vy=-1.5;//*(1+Math.random()/2);
-seed.vz=.1-Math.random()*.2;
-seed.born=frames;
-seeds.push(seed);
-}
-
-function splode(x,y,z){
-
-t=5+parseInt(Math.random()*150);
-sparkV=1+Math.random()*2.5;
-type=parseInt(Math.random()*3);
-switch(type){
-    case 0:
-        pic1=parseInt(Math.random()*10);
-        break;
-    case 1:
-        pic1=parseInt(Math.random()*10);
-        do{ pic2=parseInt(Math.random()*10); }while(pic2==pic1);
-        break;
-    case 2:
-        pic1=parseInt(Math.random()*10);
-        do{ pic2=parseInt(Math.random()*10); }while(pic2==pic1);
-        do{ pic3=parseInt(Math.random()*10); }while(pic3==pic1 || pic3==pic2);
-        break;
-}
-for(m=1;m<t;++m){
-    spark=new Object();
-    spark.x=x; spark.y=y; spark.z=z;
-    p1=pi*2*Math.random();
-    p2=pi*Math.random();
-    v=sparkV*(1+Math.random()/6)
-    spark.vx=Math.sin(p1)*Math.sin(p2)*v;
-    spark.vz=Math.cos(p1)*Math.sin(p2)*v;
-    spark.vy=Math.cos(p2)*v;
-    switch(type){
-        case 0: spark.img=sparkPics[pic1]; break;
-        case 1:
-            spark.img=sparkPics[parseInt(Math.random()*2)?pic1:pic2];
-            break;
-        case 2:
-            switch(parseInt(Math.random()*3)){
-                case 0: spark.img=sparkPics[pic1]; break;
-                case 1: spark.img=sparkPics[pic2]; break;
-                case 2: spark.img=sparkPics[pic3]; break;
-            }
-            break;
-    }
-    spark.radius=25+Math.random()*50;
-    spark.alpha=1;
-    spark.trail=new Array();
-    sparks.push(spark);
-}
-switch(parseInt(Math.random()*4)){
-    case 0:	pow=new Audio(s+"pow1.ogg"); break;
-    case 1:	pow=new Audio(s+"pow2.ogg"); break;
-    case 2:	pow=new Audio(s+"pow3.ogg"); break;
-    case 3:	pow=new Audio(s+"pow4.ogg"); break;
-}
-d=Math.sqrt((x-playerX)*(x-playerX)+(y-playerY)*(y-playerY)+(z-playerZ)*(z-playerZ));
-pow.volume=1.5/(1+d/10);
-pow.play();
-}
-
-function doLogic(){
-
-if(seedTimer<frames){
-    seedTimer=frames+seedInterval*Math.random()*10;
-    spawnSeed();
-}
-for(i=0;i<seeds.length;++i){
-    seeds[i].vy+=gravity;
-    seeds[i].x+=seeds[i].vx;
-    seeds[i].y+=seeds[i].vy;
-    seeds[i].z+=seeds[i].vz;
-    if(frames-seeds[i].born>seedLife){
-        splode(seeds[i].x,seeds[i].y,seeds[i].z);
-        seeds.splice(i,1);
-    }
-}
-for(i=0;i<sparks.length;++i){
-    if(sparks[i].alpha>0 && sparks[i].radius>5){
-        sparks[i].alpha-=.01;
-        sparks[i].radius/=1.02;
-        sparks[i].vy+=gravity;
-        point=new Object();
-        point.x=sparks[i].x;
-        point.y=sparks[i].y;
-        point.z=sparks[i].z;
-        if(sparks[i].trail.length){
-            x=sparks[i].trail[sparks[i].trail.length-1].x;
-            y=sparks[i].trail[sparks[i].trail.length-1].y;
-            z=sparks[i].trail[sparks[i].trail.length-1].z;
-            d=((point.x-x)*(point.x-x)+(point.y-y)*(point.y-y)+(point.z-z)*(point.z-z));
-            if(d>9){
-                sparks[i].trail.push(point);
-            }
-        }else{
-            sparks[i].trail.push(point);
+    <title>3D烟花特效 - 蓝色玫瑰</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: black;
+            font-family: 'Arial', sans-serif;
         }
-        if(sparks[i].trail.length>5)sparks[i].trail.splice(0,1);
-        sparks[i].x+=sparks[i].vx;
-        sparks[i].y+=sparks[i].vy;
-        sparks[i].z+=sparks[i].vz;
-        sparks[i].vx/=1.075;
-        sparks[i].vy/=1.075;
-        sparks[i].vz/=1.075;
-    }else{
-        sparks.splice(i,1);
-    }
-}
-p=Math.atan2(playerX,playerZ);
-d=Math.sqrt(playerX*playerX+playerZ*playerZ);
-d+=Math.sin(frames/80)/1.25;
-t=Math.sin(frames/200)/40;
-playerX=Math.sin(p+t)*d;
-playerZ=Math.cos(p+t)*d;
-yaw=pi+p+t;
-}
-    </script>
+        
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 2;
+            pointer-events: none; /* 让点击穿透到视频 */
+        }
+        
+        video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: cover;
+            opacity: 0.7;
+            z-index: 1;
+            filter: blur(2px) brightness(0.8);
+        }
+        
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            z-index: 3;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .info span {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .title {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 24px;
+            z-index: 3;
+            text-shadow: 0 0 20px rgba(255,0,0,0.5);
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 10px 20px;
+            border-radius: 30px;
+            background-color: rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+    </style>
 </head>
 <body>
-<!-- <video src="蓝色玫瑰代码.mp4" autoplay loop></video> -->
-<video src="蓝色玫瑰代码.mp4" autoplay muted loop controls></video>
+    <video src="蓝色玫瑰代码.mp4" autoplay loop muted></video>
+    <canvas id="canvas"></canvas>
+    <div class="title">🎆 蓝色玫瑰 · 烟花之夜</div>
+    <div class="info">✨ 3D Fireworks | <span>点击画面</span> 开启音效</div>
+
+    <script>
+        // 获取canvas元素
+        const canvas = document.getElementById('canvas');
+        
+        // 全局变量声明
+        var pi, ctx, cx, cy, playerZ, playerX, playerY, playerVX, playerVY, playerVZ, pitch, yaw, pitchV, yawV;
+        var scale, seedTimer, seedInterval, seedLife, gravity, seeds, sparkPics, sparks, frames;
+        var pow1, pow2, pow3, pow4;
+        var s = "https://cantelope.org/NYE/";
+        
+        function initVars() {
+            pi = Math.PI;
+            ctx = canvas.getContext("2d");
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            cx = canvas.width / 2;
+            cy = canvas.height / 2;
+            playerZ = -25;
+            playerX = playerY = playerVX = playerVY = playerVZ = pitch = yaw = pitchV = yawV = 0;
+            scale = 600;
+            seedTimer = 0;
+            seedInterval = 5;
+            seedLife = 100;
+            gravity = .02;
+            seeds = [];
+            sparkPics = [];
+            sparks = [];
+            frames = 0;
+            
+            // 创建火花图片（由于原链接可能无法访问，我们创建彩色火花）
+            createSparkPics();
+            
+            // 创建音频对象
+            try {
+                pow1 = new Audio();
+                pow2 = new Audio();
+                pow3 = new Audio();
+                pow4 = new Audio();
+                
+                // 使用Web Audio API生成简单音效
+                setupAudio();
+            } catch (e) {
+                console.log("Audio setup failed:", e);
+            }
+        }
+        
+        function createSparkPics() {
+            // 创建10个不同颜色的火花图片
+            for (let i = 1; i <= 10; i++) {
+                let offscreenCanvas = document.createElement('canvas');
+                offscreenCanvas.width = 64;
+                offscreenCanvas.height = 64;
+                let offCtx = offscreenCanvas.getContext('2d');
+                
+                // 随机颜色
+                let hue = (i * 36) % 360;
+                
+                // 创建径向渐变
+                let gradient = offCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+                gradient.addColorStop(0, `hsl(${hue}, 100%, 90%)`);
+                gradient.addColorStop(0.4, `hsl(${hue}, 100%, 70%)`);
+                gradient.addColorStop(0.7, `hsl(${hue}, 100%, 50%)`);
+                gradient.addColorStop(1, `hsl(${hue}, 100%, 30%)`);
+                
+                offCtx.fillStyle = gradient;
+                offCtx.beginPath();
+                offCtx.arc(32, 32, 28, 0, pi * 2);
+                offCtx.fill();
+                
+                // 添加光晕
+                offCtx.shadowColor = `hsl(${hue}, 100%, 70%)`;
+                offCtx.shadowBlur = 20;
+                offCtx.beginPath();
+                offCtx.arc(32, 32, 20, 0, pi * 2);
+                offCtx.fillStyle = `hsl(${hue}, 100%, 80%)`;
+                offCtx.fill();
+                
+                // 转换为图片
+                let img = new Image();
+                img.src = offscreenCanvas.toDataURL('image/png');
+                sparkPics.push(img);
+            }
+        }
+        
+        function setupAudio() {
+            // 创建简单的音频上下文
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                let audioCtx = new AudioContext();
+                
+                // 为每个音频对象定义play方法
+                pow1.play = function() {
+                    if (audioCtx.state === 'suspended') return;
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = 200;
+                    gain.gain.value = 0.1;
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                };
+                
+                pow2.play = function() {
+                    if (audioCtx.state === 'suspended') return;
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = 300;
+                    gain.gain.value = 0.1;
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                };
+                
+                pow3.play = function() {
+                    if (audioCtx.state === 'suspended') return;
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = 400;
+                    gain.gain.value = 0.1;
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                };
+                
+                pow4.play = function() {
+                    if (audioCtx.state === 'suspended') return;
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = 500;
+                    gain.gain.value = 0.1;
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                };
+                
+                // 点击画布时启动音频上下文
+                canvas.addEventListener('click', function() {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                });
+            }
+        }
+
+        function rasterizePoint(x, y, z) {
+            var p, d;
+            x -= playerX;
+            y -= playerY;
+            z -= playerZ;
+            p = Math.atan2(x, z);
+            d = Math.sqrt(x * x + z * z);
+            x = Math.sin(p - yaw) * d;
+            z = Math.cos(p - yaw) * d;
+            p = Math.atan2(y, z);
+            d = Math.sqrt(y * y + z * z);
+            y = Math.sin(p - pitch) * d;
+            z = Math.cos(p - pitch) * d;
+            
+            var rx1 = -1000, ry1 = 1, rx2 = 1000, ry2 = 1, rx3 = 0, ry3 = 0, rx4 = x, ry4 = z;
+            var uc = (ry4 - ry3) * (rx2 - rx1) - (rx4 - rx3) * (ry2 - ry1);
+            
+            if (!uc) return { x: 0, y: 0, d: -1 };
+            
+            var ua = ((rx4 - rx3) * (ry1 - ry3) - (ry4 - ry3) * (rx1 - rx3)) / uc;
+            var ub = ((rx2 - rx1) * (ry1 - ry3) - (ry2 - ry1) * (rx1 - rx3)) / uc;
+            
+            if (!z) z = .000000001;
+            
+            if (ua > 0 && ua < 1 && ub > 0 && ub < 1) {
+                return {
+                    x: cx + (rx1 + ua * (rx2 - rx1)) * scale,
+                    y: cy + y / z * scale,
+                    d: Math.sqrt(x * x + y * y + z * z)
+                };
+            } else {
+                return {
+                    x: cx + (rx1 + ua * (rx2 - rx1)) * scale,
+                    y: cy + y / z * scale,
+                    d: -1
+                };
+            }
+        }
+
+        function spawnSeed() {
+            var seed = new Object();
+            seed.x = -50 + Math.random() * 100;
+            seed.y = 25;
+            seed.z = -50 + Math.random() * 100;
+            seed.vx = .1 - Math.random() * .2;
+            seed.vy = -1.5;
+            seed.vz = .1 - Math.random() * .2;
+            seed.born = frames;
+            seeds.push(seed);
+        }
+
+        function splode(x, y, z) {
+            var t = 5 + parseInt(Math.random() * 150);
+            var sparkV = 1 + Math.random() * 2.5;
+            var type = parseInt(Math.random() * 3);
+            var pic1, pic2, pic3;
+            
+            switch (type) {
+                case 0:
+                    pic1 = parseInt(Math.random() * 10);
+                    break;
+                case 1:
+                    pic1 = parseInt(Math.random() * 10);
+                    do { pic2 = parseInt(Math.random() * 10); } while (pic2 == pic1);
+                    break;
+                case 2:
+                    pic1 = parseInt(Math.random() * 10);
+                    do { pic2 = parseInt(Math.random() * 10); } while (pic2 == pic1);
+                    do { pic3 = parseInt(Math.random() * 10); } while (pic3 == pic1 || pic3 == pic2);
+                    break;
+            }
+            
+            for (var m = 1; m < t; ++m) {
+                var spark = new Object();
+                spark.x = x; spark.y = y; spark.z = z;
+                var p1 = pi * 2 * Math.random();
+                var p2 = pi * Math.random();
+                var v = sparkV * (1 + Math.random() / 6);
+                spark.vx = Math.sin(p1) * Math.sin(p2) * v;
+                spark.vz = Math.cos(p1) * Math.sin(p2) * v;
+                spark.vy = Math.cos(p2) * v;
+                
+                switch (type) {
+                    case 0: spark.img = sparkPics[pic1]; break;
+                    case 1:
+                        spark.img = sparkPics[parseInt(Math.random() * 2) ? pic1 : pic2];
+                        break;
+                    case 2:
+                        switch (parseInt(Math.random() * 3)) {
+                            case 0: spark.img = sparkPics[pic1]; break;
+                            case 1: spark.img = sparkPics[pic2]; break;
+                            case 2: spark.img = sparkPics[pic3]; break;
+                        }
+                        break;
+                }
+                
+                spark.radius = 25 + Math.random() * 50;
+                spark.alpha = 1;
+                spark.trail = [];
+                sparks.push(spark);
+            }
+            
+            // 播放音效
+            try {
+                var pow;
+                switch (parseInt(Math.random() * 4)) {
+                    case 0: pow = pow1; break;
+                    case 1: pow = pow2; break;
+                    case 2: pow = pow3; break;
+                    case 3: pow = pow4; break;
+                }
+                var d = Math.sqrt((x - playerX) * (x - playerX) + (y - playerY) * (y - playerY) + (z - playerZ) * (z - playerZ));
+                if (pow && pow.play) {
+                    pow.play();
+                }
+            } catch (e) {}
+        }
+
+        function doLogic() {
+            if (seedTimer < frames) {
+                seedTimer = frames + seedInterval * Math.random() * 10;
+                spawnSeed();
+            }
+            
+            for (var i = 0; i < seeds.length; ++i) {
+                seeds[i].vy += gravity;
+                seeds[i].x += seeds[i].vx;
+                seeds[i].y += seeds[i].vy;
+                seeds[i].z += seeds[i].vz;
+                
+                if (frames - seeds[i].born > seedLife) {
+                    splode(seeds[i].x, seeds[i].y, seeds[i].z);
+                    seeds.splice(i, 1);
+                    i--;
+                }
+            }
+            
+            for (var i = 0; i < sparks.length; ++i) {
+                if (sparks[i].alpha > 0 && sparks[i].radius > 5) {
+                    sparks[i].alpha -= .01;
+                    sparks[i].radius /= 1.02;
+                    sparks[i].vy += gravity;
+                    
+                    var point = new Object();
+                    point.x = sparks[i].x;
+                    point.y = sparks[i].y;
+                    point.z = sparks[i].z;
+                    
+                    if (sparks[i].trail.length) {
+                        var x = sparks[i].trail[sparks[i].trail.length - 1].x;
+                        var y = sparks[i].trail[sparks[i].trail.length - 1].y;
+                        var z = sparks[i].trail[sparks[i].trail.length - 1].z;
+                        var d = ((point.x - x) * (point.x - x) + (point.y - y) * (point.y - y) + (point.z - z) * (point.z - z));
+                        
+                        if (d > 9) {
+                            sparks[i].trail.push(point);
+                        }
+                    } else {
+                        sparks[i].trail.push(point);
+                    }
+                    
+                    if (sparks[i].trail.length > 5) sparks[i].trail.splice(0, 1);
+                    
+                    sparks[i].x += sparks[i].vx;
+                    sparks[i].y += sparks[i].vy;
+                    sparks[i].z += sparks[i].vz;
+                    
+                    sparks[i].vx /= 1.075;
+                    sparks[i].vy /= 1.075;
+                    sparks[i].vz /= 1.075;
+                } else {
+                    sparks.splice(i, 1);
+                    i--;
+                }
+            }
+            
+            var p = Math.atan2(playerX, playerZ);
+            var d = Math.sqrt(playerX * playerX + playerZ * playerZ);
+            d += Math.sin(frames / 80) / 1.25;
+            var t = Math.sin(frames / 200) / 40;
+            playerX = Math.sin(p + t) * d;
+            playerZ = Math.cos(p + t) * d;
+            yaw = pi + p + t;
+        }
+
+        function draw() {
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 设置混合模式为叠加，让烟花更亮
+            ctx.globalCompositeOperation = 'lighter';
+            
+            // 绘制火花
+            for (var i = 0; i < sparks.length; ++i) {
+                // 绘制拖尾
+                for (var j = 0; j < sparks[i].trail.length; ++j) {
+                    var point = sparks[i].trail[j];
+                    var rp = rasterizePoint(point.x, point.y, point.z);
+                    
+                    if (rp.d != -1) {
+                        var alpha = sparks[i].alpha * (0.3 + 0.7 * (j / sparks[i].trail.length));
+                        var size = sparks[i].radius * (0.2 + 0.8 * (j / sparks[i].trail.length));
+                        
+                        ctx.globalAlpha = alpha;
+                        if (sparks[i].img && sparks[i].img.complete) {
+                            ctx.drawImage(sparks[i].img, rp.x - size / 2, rp.y - size / 2, size, size);
+                        }
+                    }
+                }
+                
+                // 绘制当前火花
+                var rp = rasterizePoint(sparks[i].x, sparks[i].y, sparks[i].z);
+                if (rp.d != -1) {
+                    ctx.globalAlpha = sparks[i].alpha;
+                    if (sparks[i].img && sparks[i].img.complete) {
+                        ctx.drawImage(sparks[i].img, rp.x - sparks[i].radius / 2, rp.y - sparks[i].radius / 2, sparks[i].radius, sparks[i].radius);
+                    }
+                }
+            }
+            
+            // 绘制上升的种子
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'white';
+            ctx.shadowColor = 'white';
+            ctx.shadowBlur = 10;
+            
+            for (var i = 0; i < seeds.length; ++i) {
+                var rp = rasterizePoint(seeds[i].x, seeds[i].y, seeds[i].z);
+                if (rp.d != -1) {
+                    ctx.beginPath();
+                    ctx.arc(rp.x, rp.y, 4, 0, pi * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.fill();
+                }
+            }
+            
+            // 重置混合模式和阴影
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.shadowBlur = 0;
+        }
+
+        function animate() {
+            // 调整画布大小以适应窗口
+            if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+                cx = canvas.width / 2;
+                cy = canvas.height / 2;
+            }
+            
+            // 更新逻辑
+            doLogic();
+            
+            // 绘制场景
+            draw();
+            
+            // 增加帧计数
+            frames++;
+            
+            // 请求下一帧
+            requestAnimationFrame(animate);
+        }
+
+        // 页面加载完成后启动
+        window.addEventListener('load', function() {
+            initVars();
+            animate();
+        });
+
+        // 窗口大小改变时调整
+        window.addEventListener('resize', function() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            cx = canvas.width / 2;
+            cy = canvas.height / 2;
+        });
+    </script>
 </body>
 </html>
-
