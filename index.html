@@ -51,7 +51,8 @@ width:100%;
 height:100%;
 overflow:hidden;
 z-index:2;
-display:none;
+opacity:0;
+pointer-events:none;
 background:black;
 }
 
@@ -126,17 +127,19 @@ background:#45a049;
 
 <!-- 视频 -->
 <div class="video-container" id="videoBox">
-<!-- <video src="蓝色玫瑰代码.mp4" autoplay loop muted playsinline></video> -->
-<video 
-id="roseVideo"
-src="蓝色玫瑰代码.mp4"
-autoplay
-muted
-playsinline
-webkit-playsinline
-x5-playsinline
-loop
-></video>
+    <video
+    id="roseVideo"
+    src="蓝色玫瑰代码.mp4"
+    muted
+    playsinline
+    webkit-playsinline
+    x5-playsinline
+    x5-video-player-type="h5"
+    x5-video-player-fullscreen="false"
+    x5-video-orientation="portrait"
+    loop
+    preload="auto"
+    ></video>
 </div>
 
 <!-- 音乐 -->
@@ -144,32 +147,21 @@ loop
 
 <script>
 
-// function acceptRose(){
-
-// document.getElementById("dialog").style.display="none";
-// document.getElementById("bg").style.display="none";
-
-// document.getElementById("starCanvas").style.display="block";
-// document.getElementById("videoBox").style.display="block";
-
-// document.getElementById("bgm").play();
-
-// startStars();
-
-// }
-
 function acceptRose(){
 
 document.getElementById("dialog").style.display="none";
 document.getElementById("bg").style.display="none";
 
 document.getElementById("starCanvas").style.display="block";
-document.getElementById("videoBox").style.display="block";
 
-document.getElementById("bgm").play();
+let videoBox=document.getElementById("videoBox");
+videoBox.style.opacity="1";
 
 let video=document.getElementById("roseVideo");
-video.play();   // 关键：微信需要这一句
+let bgm=document.getElementById("bgm");
+
+video.play().catch(()=>{});
+bgm.play().catch(()=>{});
 
 startStars();
 
