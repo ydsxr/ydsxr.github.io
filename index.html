@@ -106,9 +106,8 @@ button:hover{
 background:#45a049;
 }
 
-/* 新增：粒子层 */
-
-#particleCanvas{
+/* 五角星粒子层 */
+#starParticleCanvas{
 position:fixed;
 top:0;
 left:0;
@@ -129,8 +128,8 @@ z-index:4;
 <!-- 星空 -->
 <canvas id="starCanvas"></canvas>
 
-<!-- 粒子层 -->
-<canvas id="particleCanvas"></canvas>
+<!-- 五角星粒子层 -->
+<canvas id="starParticleCanvas"></canvas>
 
 <!-- 对话框 -->
 <div class="dialog-bg" id="dialog">
@@ -233,62 +232,66 @@ drawStars();
 
 }
 
-/* ================= 新增：蓝色粒子爆炸 ================= */
+/* ================= 新增：原地蓝色五角星 ================= */
 
-const pCanvas = document.getElementById("particleCanvas");
-const pCtx = pCanvas.getContext("2d");
+const spCanvas = document.getElementById("starParticleCanvas");
+const spCtx = spCanvas.getContext("2d");
+spCanvas.width = window.innerWidth;
+spCanvas.height = window.innerHeight;
 
-pCanvas.width = window.innerWidth;
-pCanvas.height = window.innerHeight;
+let starParticles = [];
 
-let particles = [];
+// 绘制空心五角星
+function drawPentagram(ctx, x, y, radius, rotation){
+ctx.save();
+ctx.translate(x,y);
+ctx.rotate(rotation);
+ctx.beginPath();
+for(let i=0;i<5;i++){
+ctx.lineTo(Math.cos((18+i*72)/180*Math.PI)*radius,
+           -Math.sin((18+i*72)/180*Math.PI)*radius);
+ctx.lineTo(Math.cos((54+i*72)/180*Math.PI)*(radius*0.5),
+           -Math.sin((54+i*72)/180*Math.PI)*(radius*0.5));
+}
+ctx.closePath();
+ctx.strokeStyle = "#0D47A1"; // 深蓝色
+ctx.lineWidth = 3;
+ctx.stroke();
+ctx.restore();
+}
 
+// 点击生成五角星
 document.addEventListener("click",function(e){
-
-for(let i=0;i<40;i++){
-
-particles.push({
+starParticles.push({
 x:e.clientX,
 y:e.clientY,
-vx:(Math.random()-0.5)*8,
-vy:(Math.random()-0.5)*8,
-life:1
+radius:10,
+alpha:1,
+rotation:Math.random()*2*Math.PI
+});
 });
 
-}
+function animateStars(){
+spCtx.clearRect(0,0,spCanvas.width,spCanvas.height);
 
+starParticles.forEach((p,i)=>{
+p.radius += 0.5;
+p.alpha -= 0.02;
+p.rotation += 0.05;
+
+spCtx.globalAlpha = p.alpha;
+drawPentagram(spCtx, p.x, p.y, p.radius, p.rotation);
+
+if(p.alpha <=0){
+starParticles.splice(i,1);
+}
 });
 
-function drawParticles(){
-
-pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
-
-particles.forEach((p,i)=>{
-
-p.x+=p.vx;
-p.y+=p.vy;
-p.life-=0.02;
-
-pCtx.globalAlpha=p.life;
-pCtx.fillStyle="#4FC3F7";
-
-pCtx.beginPath();
-pCtx.arc(p.x,p.y,3,0,Math.PI*2);
-pCtx.fill();
-
-if(p.life<=0){
-particles.splice(i,1);
+spCtx.globalAlpha =1;
+requestAnimationFrame(animateStars);
 }
 
-});
-
-pCtx.globalAlpha=1;
-
-requestAnimationFrame(drawParticles);
-
-}
-
-drawParticles();
+animateStars();
 
 </script>
 
